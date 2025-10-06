@@ -32,3 +32,4 @@
 - ZoomIt 기본 드로잉 단축키: **Ctrl+2**
 - Edge Web Capture: **Ctrl+Shift+S** (Edge 활성 시), 그 외에는 스니핑 도구 호출
 - **Zoomig v9.01** 설치 (https://learn.microsoft.com/ko-kr/sysinternals/downloads/zoomit)
+
