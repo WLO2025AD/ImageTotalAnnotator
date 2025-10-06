@@ -1,0 +1,16 @@
+# Logs & temp
+*.log
+*.tmp
+Thumbs.db
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Python/Node (optional future)
+__pycache__/
+*.pyc
+node_modules/
+dist/
+build/
