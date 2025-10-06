@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<meta charset="utf-8">
+<title>Image Annotator v2.2 (Draw / Text / Save)</title>
+<style>
+  body{font-family:Segoe UI,system-ui,sans-serif;background:#f1f3f5;margin:0}
+  .wrap{max-width:980px;margin:20px auto;background:#fff;padding:16px 18px;border-radius:10px;box-shadow:0 12px 28px rgba(0,0,0,.08)}
+  h1{font-size:20px;margin:0 0 6px}
+  .note{color:#444;margin:0 0 10px}
+  #c{background:#fff;border:1px solid #bbb;width:920px;height:520px;display:block;margin:12px auto}
+  .bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .btn{background:#1976d2;color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer}
+  .in{border:1px solid #bbb;border-radius:8px;padding:6px 10px}
+  .tip{color:#666;text-align:center;margin-top:6px}
+</style>
+<div class="wrap">
+  <h1>🖊 Image Annotator v2.2</h1>
+  <p class="note">이미지를 <b>드래그/업로드</b>하거나, <b>Ctrl+V(붙여넣기)</b>로 클립보드 이미지를 불러오세요. (AHK v2.2: Ctrl+Alt+X / Ctrl+Alt+Shift+X)</p>
+  <div class="bar">
+    <input type="file" id="file" class="in">
+    <button class="btn" id="pen">펜 (P)</button>
+    <button class="btn" id="line">직선 (L)</button>
+    <button class="btn" id="text">텍스트 (T)</button>
+    <button class="btn" id="undo">실행취소 (Ctrl+Z)</button>
+    <button class="btn" id="save">PNG 저장</button>
+  </div>
+  <canvas id="c" width="920" height="520"></canvas>
+  <p class="tip">팁: AHK v2.2에서 <b>현재 창 캡처</b>는 Ctrl+Alt+X, <b>전체 화면 캡처</b>는 Ctrl+Alt+Shift+X → 이 페이지 자동 열림 후 Ctrl+V 자동 실행으로 이미지가 붙습니다.</p>
+</div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');let mode='pen',down=false,sx=0,sy=0,h=[];
+function loadImgURL(url){const i=new Image();i.onload=()=>{x.clearRect(0,0,c.width,c.height);x.drawImage(i,0,0,c.width,c.height)};i.src=url}
+function loadImgFile(f){const r=new FileReader();r.onload=e=>loadImgURL(e.target.result);r.readAsDataURL(f)}
+document.getElementById('file').onchange=e=>e.target.files[0]&&loadImgFile(e.target.files[0]);
+c.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])loadImgFile(e.dataTransfer.files[0])}
+c.ondragover=e=>e.preventDefault();
+window.addEventListener('paste', async e=>{
+  const items = e.clipboardData?.items||[];
+  for (const it of items){
+    if (it.type?.startsWith('image/')){
+      const blob = it.getAsFile();
+      const url  = URL.createObjectURL(blob);
+      loadImgURL(url);
+      return;
+    }
+  }
+  alert('클립보드에 이미지가 없습니다. (스크린샷 후 Ctrl+V)');
+});
+function save(){h.push(c.toDataURL());}
+document.getElementById('pen').onclick=()=>mode='pen';
+document.getElementById('line').onclick=()=>mode='line';
+document.getElementById('text').onclick=()=>mode='text';
+document.getElementById('undo').onclick=()=>{if(!h.length)return;const i=new Image();i.onload=()=>x.drawImage(i,0,0);i.src=h.pop();}
+document.getElementById('save').onclick=()=>{const a=document.createElement('a');a.download='annotated.png';a.href=c.toDataURL('image/png');a.click();}
+let buf;
+c.onmousedown=e=>{down=true;sx=e.offsetX;sy=e.offsetY;save();buf=x.getImageData(0,0,c.width,c.height);if(mode==='text'){const t=prompt('텍스트 입력:');if(t){x.fillStyle='#111';x.font='18px \"Malgun Gothic\",sans-serif';x.fillText(t,sx,sy)}down=false}};
+c.onmousemove=e=>{if(!down)return;if(mode==='pen'){x.lineCap='round';x.strokeStyle='#111';x.lineWidth=2;x.lineTo(e.offsetX,e.offsetY);x.stroke()}else if(mode==='line'){x.putImageData(buf,0,0);x.beginPath();x.moveTo(sx,sy);x.lineTo(e.offsetX,e.offsetY);x.stroke()}};
+c.onmouseup=()=>down=false;
+// 포커스 주기 (AHK가 열고 Ctrl+V 보낼 때 붙여넣기 받도록)
+window.addEventListener('load',()=>c.focus());
+c.setAttribute("tabindex","0");
+</script>
+</html>
